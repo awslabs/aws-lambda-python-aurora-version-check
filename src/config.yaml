@@ -1,0 +1,15 @@
+---
+# SES settings
+ses_region: "us-east-1"
+ses_from: "changeme@domain.com" # Sender
+ses_send: "changeme@domain.com" # Recipient list separated by comma
+
+# Log Configuration File.
+log_config: "log_config.yaml"
+
+# Email template for sending blocked IP found notification.
+email_template: "check-aurora-update\n\n
+New Aurora Engine update released: \n
+{0}\n
+{1}\n\n"
+...

@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Parameters: 
+  CONFIGBUCKET:
+    Type: String
+    Description: "S3 Bucket to use for storing configuration file"
+  CONFIGFILE:
+    Type: String
+    Description: "Configuration file name "
+  BUCKET:
+    Type: String
+    Description: "S3 Bucket to store the Aurora Update doc fingerprints"
+
+Resources:
+  AuroraNewVersionChecking:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: AuroraNewVersionCheckingLambda
+      Description: "Function for checking new Aurora Updates"
+      MemorySize: 256
+      Timeout: 60
+      Handler: lambda_module.main_handler
+      Runtime: python3.6
+      CodeUri: ../bin/lambda.zip
+      Role: !GetAtt AuroraNewVersionCheckingLambdaIAMRole.Arn
+      Environment:
+        Variables:
+          CONFIG_BUCKET: !Ref CONFIGBUCKET
+          CONFIG_FILE: !Ref CONFIGFILE
+          BUCKET: !Ref BUCKET
+      Events:
+        DailyEvent: # Run at 10:00 and 23:00 UTC, once every day
+          Properties:
+            Schedule: cron(0 10,23 * * ? *)
+          Type: Schedule
+  
+  AuroraNewVersionCheckingLambdaIAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+        Path: "/"
+        ManagedPolicyArns: #This policy is for Lambda invoke / logging
+          - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        Policies: 
+          - 
+            PolicyName: "root"
+            PolicyDocument: 
+              Version: "2012-10-17"
+              Statement:
+                -  #Policy to allow Organizations account description
+                  Effect: "Allow"
+                  Action:
+                    - organizations:DescribeAccount
+                  Resource: "*"
+                - #Policy to allow SES sending
+                  Effect: "Allow"
+                  Action:
+                    - ses:SendEmail
+                    - ses:SendRawEmail
+                  Resource: "*"
+                - #Policy to allow reading and storing S3 file
+                  Effect: Allow
+                  Action:
+                    - s3:GetObject
+                    - s3:GetObjectAcl
+                    - s3:PutObject
+                    - s3:PutObjectAcl
+                  Resource: !Sub arn:aws:s3:::${BUCKET}/*
+                - #Policy to allow reading and storing S3 file
+                  Effect: Allow
+                  Action:
+                    - s3:GetObject
+                    - s3:GetObjectAcl
+                    - s3:PutObject
+                    - s3:PutObjectAcl
+                  Resource: !Sub arn:aws:s3:::${CONFIGBUCKET}/*
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            -
+              Sid: "AllowLambdaServiceToAssumeRole"
+              Effect: "Allow"
+              Action: 
+                - "sts:AssumeRole"
+              Principal:
+                Service: 
+                  - "lambda.amazonaws.com"
+  
