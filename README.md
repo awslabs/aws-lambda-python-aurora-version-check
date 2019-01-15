@@ -1,6 +1,6 @@
-## Automated checking for new Aurora engine update releases.
+## AWS Lambda Python module for periodic checking of new Aurora engine update releases.
 
-Python Lambda module for checking new Aurora Engine update releases.
+Python SAM Lambda module for periodically checking Aurora Database Engine Updates documentation site for new version releases and notify via SES if updates are found.
 
 ![screenshot](Dashboard.png)
 
