@@ -51,7 +51,7 @@ LOGGER = AWSHelper.LOGGER
 
 class CheckAuroraEngineUpdates(object):
     """
-    Checks Blocked IPs from Russia
+    Checks Aurora Documentation site for checking new Engine Update releases.
     """
 
     def __init__(self):
